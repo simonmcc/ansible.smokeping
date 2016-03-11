@@ -1,0 +1,9 @@
+RewriteEngine  on
+RewriteRule    "^/smokeping$"  "/smokeping/smokeping.cgi"  [R]
+
+ScriptAlias /smokeping/smokeping.cgi /usr/lib/cgi-bin/smokeping.cgi
+Alias /smokeping /usr/share/smokeping/www
+
+<Directory "/usr/share/smokeping/www">
+    Options FollowSymLinks
+</Directory>

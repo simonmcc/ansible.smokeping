@@ -1,0 +1,51 @@
+# {{ ansible_managed }}
+
+*** Targets ***
+
+ # default probe
+probe = FPing
+
+menu = Top
+title = Network Latency Grapher
+remark = SmokePing for {{ site_name|capitalize }}.
+
++ {{ site_name|capitalize }}
+menu = {{ site_name|capitalize }}
+title = {{ site_name|capitalize }}
+
+{% if smokeping_all_inventory %}
+{% for group in groups|sort if group != 'all' and not 'aggreg' in group and group != 'ungrouped' %}
+++ {{ group }}
+menu = {{ group|replace("_", " ")|title }}
+title = {{ group|replace("_", " ")|title }}
+
+{% for host in groups[group] %}
++++ {{ hostvars[host]['ansible_hostname'] }}
+menu = {{ hostvars[host]['ansible_hostname'] }}
+title = {{ group|replace("_", " ")|title }} {{ hostvars[host]['ansible_hostname'] }} at {{ hostvars[host].ipv4_address|default(hostvars[host].ansible_default_ipv4.address) }}
+host = {{ hostvars[host]['ansible_fqdn'] }}
+alerts = bigloss,someloss,startloss,rttdetect,hostdown
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+# External from Ansible config
+{% for host in smokeping_hosts|default([]) %}
+++ {{ host.title|replace(' ', '') }}
+menu = {{ host.title }}
+title = {{ host.title }} at {{ host.ipv4 }}
+host = {{ host.ipv4 }}
+alerts = bigloss,someloss,startloss,rttdetect,hostdown
+
+{% endfor %}
+
+
+# generic external_hosts, shared with icinga2 role
+{% for host in external_hosts|default([]) %}
+{% set title = host.fqdn.split('.') %}
+++ {{ title|first }}
+menu = {{ host.fqdn }}
+title = {{ host.fqdn }} at {{ host.ipv4 }}
+host = {{ host.ipv4 }}
+alerts = bigloss,someloss,startloss,rttdetect,hostdown
+{% endfor %}

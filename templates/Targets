@@ -42,10 +42,19 @@ alerts = bigloss,someloss,startloss,rttdetect,hostdown
 
 # generic external_hosts, shared with icinga2 role
 {% for host in external_hosts|default([]) %}
-{% set title = host.fqdn.split('.') %}
-++ {{ title|first }}
+++ {{ host.fqdn.replace('.', '-') }}
 menu = {{ host.fqdn }}
 title = {{ host.fqdn }} at {{ host.ipv4 }}
+{% if host.probe is defined %}
+probe = {{ host.probe }}
+{% endif %}
 host = {{ host.ipv4 }}
 alerts = bigloss,someloss,startloss,rttdetect,hostdown
+{% if host.url is defined %}
+url = {{ host.url }}
+{% endif %}
+{% if host.port is defined %}
+port = {{ host.port }}
+{% endif %}
+
 {% endfor %}

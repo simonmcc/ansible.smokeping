@@ -1,0 +1,16 @@
+---
+driver:
+  name: docker
+docker:
+  containers:
+    - name: ansible.smokeping
+      image: ubuntu
+      image_version: latest
+      ansible_groups:
+        - group1
+verifier:
+  name: testinfra
+dependency:
+  name: galaxy
+  requirements_file: requirements.yml
+  enabled: True

@@ -5,10 +5,11 @@
   apt: pkg=smokeping force=yes update_cache=yes
   tags: smokeping
 
-- template: src=smokeping.conf.j2 dest=/etc/smokeping/apache2.conf
+- name: Template /etc/smokeping/apache2.conf
+  template: src=smokeping.conf.j2 dest=/etc/smokeping/apache2.conf
 
 - name: configure smokeping in /etc/smokeping/config.d
-  template: src={{ item }} dest=/etc/smokeping/config.d/{{ item }} owner=root group=root mode=644
+  template: src={{ item }} dest=/etc/smokeping/config.d/{{ item }} owner=root group=root mode=0644
   with_items:
     - Alerts
     - General
@@ -20,7 +21,9 @@
     - restart smokeping
 
 - name: link to smokeping config in /etc/apache2/conf-available
-  command: creates=/etc/apache2/conf-available/smokeping.conf chdir=/etc/apache2/conf-available ln -s ../../smokeping/apache2.conf smokeping.conf
+  file:
+    path: /etc/apache2/conf-available/smokeping.conf
+    src: /etc/smokeping/apache2.conf
   when: ansible_distribution_version not in ["12.04", "12.10", "13.04"]
   tags: smokeping
 
@@ -31,6 +34,8 @@
 
 - name: enable the cgid apache2 module
   command: a2enmod cgid
-  tags: smokeping
+  tags:
+    - skip_ansible_lint
+    - smokeping
   notify:
     - reload apache config

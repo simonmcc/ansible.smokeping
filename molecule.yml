@@ -1,13 +1,35 @@
 ---
 driver:
   name: docker
+
+vagrant:
+  platforms:
+    - name: debian
+      box: debian/jessie64
+
+  providers:
+    - name: virtualbox
+      type: virtualbox
+      options:
+        memory: 512
+
+  instances:
+    - name: vagrant-test-01
+      ansible_groups:
+        - group_1
+      interfaces:
+        - network_name: private_network
+          type: dhcp
+          auto_config: true
+
 docker:
   containers:
     - name: ansible.smokeping
-      image: ubuntu
-      image_version: latest
+      image: 'debian'
+      image_version: jessie
       ansible_groups:
         - group1
+
 verifier:
   name: testinfra
 dependency:

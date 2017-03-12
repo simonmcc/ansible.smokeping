@@ -22,18 +22,31 @@
 
 - name: link to smokeping config in /etc/apache2/conf-available
   file:
-    path: /etc/apache2/conf-available/smokeping.conf
     src: /etc/smokeping/apache2.conf
+    dest: /etc/apache2/conf-available/smokeping.conf
+    state: link
   when: ansible_distribution_version not in ["12.04", "12.10", "13.04"]
   tags: smokeping
+
+- name: Check for conf-available to conf-enables link
+  stat:
+    path: /etc/apache2/conf-available/smokeping.conf
+  register: a2link
 
 - name: enable the smokeping apache2 configuration
   command: a2enconf smokeping
-  when: ansible_distribution_version not in ["12.04", "12.10", "13.04"]
+  when: ansible_distribution_version not in ["12.04", "12.10", "13.04"] and a2link.stat.islnk is defined
   tags: smokeping
+
+- name: Check for /etc/apache2/mods-enabled/cgid.load link
+  stat:
+    path: /etc/apache2/mods-enabled/cgid.load
+  register: a2mod_cgid
+  tags: apache
 
 - name: enable the cgid apache2 module
   command: a2enmod cgid
+  when: not (a2mod_cgid.stat.islnk is defined and a2mod_cgid.stat.islnk == True)
   tags:
     - skip_ansible_lint
     - smokeping

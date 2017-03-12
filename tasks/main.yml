@@ -35,7 +35,7 @@
 
 - name: enable the smokeping apache2 configuration
   command: a2enconf smokeping
-  when: ansible_distribution_version not in ["12.04", "12.10", "13.04"] and a2link.stat.islnk is defined
+  when: ansible_distribution_version not in ["12.04", "12.10", "13.04"] and (a2link.stat.islnk == False)
   tags: smokeping
 
 - name: Check for /etc/apache2/mods-enabled/cgid.load link

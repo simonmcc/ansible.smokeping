@@ -5,10 +5,11 @@
   apt: pkg=smokeping force=yes update_cache=yes
   tags: smokeping
 
-- template: src=smokeping.conf.j2 dest=/etc/smokeping/apache2.conf
+- name: Template /etc/smokeping/apache2.conf
+  template: src=smokeping.conf.j2 dest=/etc/smokeping/apache2.conf
 
 - name: configure smokeping in /etc/smokeping/config.d
-  template: src={{ item }} dest=/etc/smokeping/config.d/{{ item }} owner=root group=root mode=644
+  template: src={{ item }} dest=/etc/smokeping/config.d/{{ item }} owner=root group=root mode=0644
   with_items:
     - Alerts
     - General
@@ -20,17 +21,34 @@
     - restart smokeping
 
 - name: link to smokeping config in /etc/apache2/conf-available
-  command: creates=/etc/apache2/conf-available/smokeping.conf chdir=/etc/apache2/conf-available ln -s ../../smokeping/apache2.conf smokeping.conf
+  file:
+    src: /etc/smokeping/apache2.conf
+    dest: /etc/apache2/conf-available/smokeping.conf
+    state: link
   when: ansible_distribution_version not in ["12.04", "12.10", "13.04"]
   tags: smokeping
+
+- name: Check for conf-available to conf-enables link
+  stat:
+    path: /etc/apache2/conf-available/smokeping.conf
+  register: a2link
 
 - name: enable the smokeping apache2 configuration
   command: a2enconf smokeping
-  when: ansible_distribution_version not in ["12.04", "12.10", "13.04"]
+  when: ansible_distribution_version not in ["12.04", "12.10", "13.04"] and (a2link.stat.islnk == False)
   tags: smokeping
+
+- name: Check for /etc/apache2/mods-enabled/cgid.load link
+  stat:
+    path: /etc/apache2/mods-enabled/cgid.load
+  register: a2mod_cgid
+  tags: apache
 
 - name: enable the cgid apache2 module
   command: a2enmod cgid
-  tags: smokeping
+  when: not (a2mod_cgid.stat.islnk is defined and a2mod_cgid.stat.islnk == True)
+  tags:
+    - skip_ansible_lint
+    - smokeping
   notify:
     - reload apache config
